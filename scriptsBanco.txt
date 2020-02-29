@@ -1,0 +1,89 @@
+//////EXERCICIO .1
+
+Criando Function para as colunas created_at e updated_at:
+
+	CREATE OR REPLACE FUNCTION trigger_set_timestamp()
+	RETURNS TRIGGER AS $$
+	BEGIN
+	NEW.updated_at = NOW();
+   	RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+
+Criando a tabela posts
+
+	create table posts(
+		id serial primary key,
+		author varchar(50) NOT NULL,
+		title varchar(50) NOT NULL,
+		text varchar(255) NOT NULL
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	)
+
+Criando triggers para ativar a funtion trigger_set_timestamp()
+
+	CREATE TRIGGER set_timestamp
+	BEFORE UPDATE ON todos
+	FOR EACH ROW
+	EXECUTE PROCEDURE trigger_set_timestamp();
+
+Criando a tabela comments
+
+	create table comments(
+		id serial primary key,
+		post_id integer references posts(id),
+		message varchar(50) NOT NULL,
+		author varchar(50) NOT NULL,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	)
+
+
+Criando triggers para ativar a funtion trigger_set_timestamp()
+
+	CREATE TRIGGER set_timestamp_comments
+	BEFORE UPDATE ON comments
+	FOR EACH ROW
+	EXECUTE PROCEDURE trigger_set_timestamp();
+
+//////EXERCÍCIO .2
+
+Alimentando posts
+
+INSERT INTO posts (author, title, text) VALUES ('Lucas Machado', 'Título', 'Textão')
+INSERT INTO posts (author, title, text) VALUES ('Zézinho', 'Vendo geladeira', 'Geladeira barata')
+
+Alimentando comments
+
+INSERT INTO comments (post_id, message, author) VALUES ( 1, 'Oi, quer comprar uma geladeira?', 'Zézinho')
+INSERT INTO comments (post_id, message, author) VALUES ( 1, 'boa tarde abrcs', 'Tia')
+INSERT INTO comments (post_id, message, author) VALUES ( 2, 'Quanto que tá a geladeira?', 'Anônimo')
+
+
+//////EXERCÍCIO .3
+
+SELECT * FROM posts ORDER BY title;
+
+//////EXERCÍCIO .4
+
+SELECT
+p.id id_post,
+p.title title_post,
+p.text text_post,
+p.created_at created_at_post,
+p.updated_at updated_at_post,
+c.id id_comment,
+c.post_id post_id_comment,
+c.message message_comment,
+c.author author_comment,
+c.created_at created_at_comment,
+c.updated_at updated_at_comment
+FROM posts p
+JOIN comments c ON p.id = c.post_id;
+
+//////EXERCÍCIO .5
+
+select distinct *, (select count(*) from comments where posts.id = comments.post_id) as count_comments
+from posts;
+
